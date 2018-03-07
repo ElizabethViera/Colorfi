@@ -34,9 +34,9 @@ def constructColorScheme(pixelList):
         if saturation > maxSat:
             maxSat = saturation
             rd, gn, bl = r, g, b
-    print("main color = " + str(rd) + str(gn) + str(bl))
+    #print("main color = " + str(rd) + str(gn) + str(bl))
     h,s,v = colorsys.rgb_to_hsv(rd,gn,bl)
-    print("hsv = " + str(h))
+    #print("hsv = " + str(h))
     #This converts our most saturated color to HSV
 
     color1 = colorsys.hsv_to_rgb(colorOffset(h,-36), s, v)
@@ -60,14 +60,14 @@ def main():
     colorList = constructColorScheme(pixelList)
     for color in colorList:
         square = "rgb(" + str(int(color[0])) + "," + str(int(color[1])) + "," + str(int(color[2])) + ")"
-        print(color)
+        #print(color)
         im = PIL.Image.new("RGB", (100, 100), square)
         im.show()
 
 #####################
 #Filter
 #####################
-"""
+
 #Future work in progress
 #Muted colors filter
 def mutedFilter():
@@ -76,23 +76,26 @@ def mutedFilter():
     photo = photo.convert('RGB')
     photo.show()
     pixelsMap = photo.load()
-    width, height = photo.size
-    for w in range(width):
-        for h in range(height):
-            r,g,b = photo.getpixel((w,h))
+    for width in range(photo.size[0]):
+        for height in range(photo.size[1]):
+            r,g,b = pixelsMap[width,height]
+            #print("before",r,g,b)
             r /= 255
             g /= 255
             b /= 255
             h,s,v = colorsys.rgb_to_hsv(r,g,b)
+            #print("s1 = ", s)
             s = s/2
+            #print("s1 = ", s)
             r,g,b = colorsys.hsv_to_rgb(h,s,v)
             r *= 255
             b *= 255
             g *= 255
-            pixelsMap[w,h] = (int(r),int(g),int(b))
+            #print("after ",r,g,b)
+            pixelsMap[width,height] = (int(r), int(g), int(b))
     photo.show()
 
-"""
+
 #####################
 #Tkinter Stuff#######
 #####################
