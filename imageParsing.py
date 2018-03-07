@@ -4,6 +4,9 @@ from tkinter import *
 from tkinter.filedialog import askopenfilenames 
 import random
 
+###########################
+#Color Suggest
+###########################
 
 def gatherColorData(string):
     height = 500
@@ -34,11 +37,8 @@ def constructColorScheme(pixelList):
         if saturation > maxSat:
             maxSat = saturation
             rd, gn, bl = r, g, b
-    #print("main color = " + str(rd) + str(gn) + str(bl))
     h,s,v = colorsys.rgb_to_hsv(rd,gn,bl)
-    #print("hsv = " + str(h))
     #This converts our most saturated color to HSV
-
     color1 = colorsys.hsv_to_rgb(colorOffset(h,-36), s, v)
     color2 = colorsys.hsv_to_rgb(colorOffset(h,-18), .75*s, v)
     color3 = colorsys.hsv_to_rgb(h,s,v)
@@ -54,23 +54,50 @@ def getImage():
     imageString = file[0]
     return imageString
 
-def main():
+def suggestColors():
     imageString = getImage()
     pixelList = gatherColorData(imageString)
     colorList = constructColorScheme(pixelList)
+    """
     for color in colorList:
         square = "rgb(" + str(int(color[0])) + "," + str(int(color[1])) + "," + str(int(color[2])) + ")"
         #print(color)
         im = PIL.Image.new("RGB", (100, 100), square)
         im.show()
+    """
+    ####Takes suggesed colors and an additional black and white image to create overlay 
+    color = random.choice(colorList)
+    photo1 = PIL.Image.open(imageString)
+    photo2 = ProcessOverlay(color)
+    width, height = photo1.size
+    photo2 = photo2.resize((width, height), PIL.Image.BICUBIC)
+    finalPhoto = PIL.Image.blend(photo1,photo2, .5)
+    finalPhoto.show()
 
 #####################
-#Filter
+#Overlay
+#####################
+
+def ProcessOverlay(color):
+    imageString2 = getImage()
+    photo2 = PIL.Image.open(imageString2)
+    photo2 = photo2.convert('RGB')
+    pixelsMap2 = photo2.load()
+    for width in range(photo2.size[0]):
+        for height in range(photo2.size[1]):
+            if (pixelsMap2[width, height] != (255,255,255)):
+                pixelsMap2[width, height] = (int(color[0]),int(color[1]),int(color[2]))
+    photo2.show()
+    return photo2
+
+
+#####################
+#Desaturate Filter
 #####################
 
 #Future work in progress
 #Muted colors filter
-def mutedFilter():
+def Filter():
     imageString = getImage()
     photo = PIL.Image.open(imageString)
     photo = photo.convert('RGB')
@@ -79,21 +106,21 @@ def mutedFilter():
     for width in range(photo.size[0]):
         for height in range(photo.size[1]):
             r,g,b = pixelsMap[width,height]
-            #print("before",r,g,b)
-            r /= 255
-            g /= 255
-            b /= 255
-            h,s,v = colorsys.rgb_to_hsv(r,g,b)
-            #print("s1 = ", s)
-            s = s/2
-            #print("s1 = ", s)
-            r,g,b = colorsys.hsv_to_rgb(h,s,v)
-            r *= 255
-            b *= 255
-            g *= 255
-            #print("after ",r,g,b)
-            pixelsMap[width,height] = (int(r), int(g), int(b))
+            r,g,b = desaturate(r,g,b)
+            pixelsMap[width,height] = (r, g, b)
     photo.show()
+
+def desaturate(r,g,b):
+    r /= 255
+    g /= 255
+    b /= 255
+    h,s,v = colorsys.rgb_to_hsv(r,g,b)
+    s = s/2
+    r,g,b = colorsys.hsv_to_rgb(h,s,v)
+    r *= 255
+    b *= 255
+    g *= 255
+    return int(r),int(g),int(b)
 
 
 #####################
@@ -105,13 +132,12 @@ def init(data):
     pass
 
 def mousePressed(event, data):
-    main()
-    pass
+    suggestColors()
 
 def keyPressed(event, data):
     # use event.char and event.keysym
     if (event.keysym == "m"):
-        mutedFilter()
+        Filter()
 
 def redrawAll(canvas, data):
     # draw in canvas
