@@ -12,7 +12,7 @@ def gatherColorData(string):
     height = 500
     width = 500
     picture = PIL.Image.open(string)
-    picture.show()
+    #picture.show()
     picture = picture.resize((width, height), PIL.Image.BICUBIC)
     picture = picture.convert('RGB')
     pixelList = []
@@ -67,11 +67,11 @@ def suggestColors():
     """
     ####Takes suggesed colors and an additional black and white image to create overlay 
     color = random.choice(colorList)
-    photo1 = PIL.Image.open(imageString)
+    photo1 = Filter(imageString)
     photo2 = ProcessOverlay(color)
     width, height = photo1.size
     photo2 = photo2.resize((width, height), PIL.Image.BICUBIC)
-    finalPhoto = PIL.Image.blend(photo1,photo2, .5)
+    finalPhoto = PIL.Image.blend(photo1,photo2, .4)
     finalPhoto.show()
 
 #####################
@@ -87,7 +87,7 @@ def ProcessOverlay(color):
         for height in range(photo2.size[1]):
             if (pixelsMap2[width, height] != (255,255,255)):
                 pixelsMap2[width, height] = (int(color[0]),int(color[1]),int(color[2]))
-    photo2.show()
+    #photo2.show()
     return photo2
 
 
@@ -97,18 +97,18 @@ def ProcessOverlay(color):
 
 #Future work in progress
 #Muted colors filter
-def Filter():
-    imageString = getImage()
+def Filter(imageString):
     photo = PIL.Image.open(imageString)
     photo = photo.convert('RGB')
-    photo.show()
+    #photo.show()
     pixelsMap = photo.load()
     for width in range(photo.size[0]):
         for height in range(photo.size[1]):
             r,g,b = pixelsMap[width,height]
             r,g,b = desaturate(r,g,b)
             pixelsMap[width,height] = (r, g, b)
-    photo.show()
+    return photo
+    #photo.show()
 
 def desaturate(r,g,b):
     r /= 255
