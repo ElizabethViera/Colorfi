@@ -58,17 +58,16 @@ def suggestColors():
     imageString = getImage()
     pixelList = gatherColorData(imageString)
     colorList = constructColorScheme(pixelList)
-    """
-    for color in colorList:
-        square = "rgb(" + str(int(color[0])) + "," + str(int(color[1])) + "," + str(int(color[2])) + ")"
-        #print(color)
-        im = PIL.Image.new("RGB", (100, 100), square)
-        im.show()
-    """
+    
+    # for color in colorList:
+    #     square = "rgb(" + str(int(color[0])) + "," + str(int(color[1])) + "," + str(int(color[2])) + ")"
+    #     #print(color)
+    #     im = PIL.Image.new("RGB", (100, 100), square)
+    #     im.show()
+   
     ####Takes suggesed colors and an additional black and white image to create overlay 
-    color = random.choice(colorList)
     photo1 = Filter(imageString)
-    photo2 = ProcessOverlay(color)
+    photo2 = ProcessOverlay(colorList)
     width, height = photo1.size
     photo2 = photo2.resize((width, height), PIL.Image.BICUBIC)
     finalPhoto = PIL.Image.blend(photo1,photo2, .4)
@@ -78,17 +77,55 @@ def suggestColors():
 #Overlay
 #####################
 
-def ProcessOverlay(color):
+def ProcessOverlay(colorList):
     imageString2 = getImage()
     photo2 = PIL.Image.open(imageString2)
     photo2 = photo2.convert('RGB')
     pixelsMap2 = photo2.load()
-    for width in range(photo2.size[0]):
-        for height in range(photo2.size[1]):
-            if (pixelsMap2[width, height] != (255,255,255)):
-                pixelsMap2[width, height] = (int(color[0]),int(color[1]),int(color[2]))
+    partitions = partitionImage(photo2)
+    for partition in partitions:
+        color = random.choice(colorList)
+        for width, height in partition:
+            pixelsMap2[width, height] = (int(color[0]),int(color[1]),int(color[2]))
+
     #photo2.show()
     return photo2
+
+
+#####################
+#Partition Image by Floodfill
+#####################
+
+def partitionImage(image):
+    def floodFill(Startx, Starty, count):
+            subPartition = [(Startx,Starty)]
+            for x,y in subPartition:
+                for z in range(-1,2):
+                    for w in range(-1,2):
+                        if not (x+z < 0 or y+w < 0 or x+z >= len(imageValues) 
+                            or y+w >= len(imageValues[0])):
+                            if imageValues[x+z][y+w] == 0:
+                                imageValues[x+z][y+w] = count
+                                subPartition.append((x+z,y+w))
+            return subPartition, imageValues
+
+    imageValues = [[-1 for y in range(image.size[1])] \
+                    for x in range(image.size[0])]
+    for x in range(image.size[0]):
+        for y in range(image.size[1]):
+            if image.getpixel((x,y)) != (255,255,255):
+                imageValues[x][y] = 0
+    count = 0
+    partitions = []
+    for x in range(image.size[0]):
+        for y in range(image.size[1]):
+            if imageValues[x][y] == 0:
+                count += 1
+                imageValues[x][y] = count
+                subPartition, imageValues = floodFill(x, y, count)
+                if len(subPartition) > 20:
+                    partitions.append(subPartition)
+    return partitions
 
 
 #####################
